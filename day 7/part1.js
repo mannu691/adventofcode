@@ -2,7 +2,6 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 
 const fs = require("fs");
 
-// Read the input file
 const inputFile = fs.readFileSync("input.txt", "utf-8");
 const str = inputFile.toString();
 const data = new Map()
@@ -21,8 +20,6 @@ function isPossbile(terms, ans) {
         return (
             evaluate(index + 1, currentValue + nextValue) ||
             evaluate(index + 1, currentValue * nextValue)
-            ||
-            evaluate(index + 1, parseInt(`${currentValue}${nextValue}`))
         );
     }
     return evaluate(1, terms[0]);
