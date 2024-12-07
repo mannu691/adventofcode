@@ -1,4 +1,3 @@
-// Refactored and Commented by ChatGPT, for public interest
 const fs = require("fs");
 
 // Read the input file
