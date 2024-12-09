@@ -1,40 +1,52 @@
 const fs = require("fs");
-
 const inputFile = fs.readFileSync("input.txt", "utf-8");
 const str = inputFile.toString();
-let id = 0;
-const data = [];
-str.split("").forEach((v, i) => {
-    let val = id.toString();
-    if (i % 2 != 0) val = ".";
-    else id++;
-    data.push(val.repeat(parseInt(v)));
-})
 
-const ans = new Array();
-let i = 0;
-let j = data.length - 1;
-while (i <= j) {
-    if (!data[i].includes(".")) {
-        ans.push(data[i]);
-        i++;
-    }
-    else if (!data[j].includes(".") && data[i].length >= data[j].length) {
-        ans.push(data[j]);
-        if (data[i].length == data[j].length) {
-            i++;
-        } else {
-            data[i] = '.'.repeat(data[i].length - data[j].length);
-        }
-        j--;
+let id = 0;
+let diskMap = [];
+str.split("").forEach((v, i) => {
+    if (i % 2 != 0) {
+        diskMap.push(...'.'.repeat(v).split(""));
     }
     else {
-        j--;
+        for (let i = 0; i < parseInt(v); i++) {
+            diskMap.push(id.toString());
+        }
+        id++;
     }
+})
+let j = diskMap.length - 1;
+let prev = j;
+let count = 0;
+while (j > 0) {
+    if (diskMap[j] == '.') { j--; continue; };
+    if (diskMap[j] != diskMap[prev] && count != 0) {
+        let spaceCount = 0;
+        for (let i = 0; i < prev; i++) {
+            if (diskMap[i] == ".") spaceCount++;
+            else spaceCount = 0;
+            if (spaceCount == count) {
+                for (let k = i; k > i - count; k--) {
+                    diskMap[k] = diskMap[prev];
+                }
+
+                for (let k = prev; k < prev + count; k++) {
+                    diskMap[k] = ".";
+                }
+                break;
+            }
+        }
+        count = 1;
+    }
+    else {
+        count++;
+    }
+    prev = j;
+    j--;
 }
 let sum = 0;
-for (let k = 0; k < ans.length; k++) {
-    sum += ans[k] * k
+for (let i = 0; i < diskMap.length; i++) {
+    if (diskMap[i] == '.') continue;
+    sum += parseInt(diskMap[i]) * i;
 }
-console.log(ans.join(""))
 console.log(sum)
