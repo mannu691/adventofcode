@@ -1,11 +1,10 @@
 export async function part1() {
-    const inputFile = await Deno.readTextFile("input.txt");
-    const str = inputFile.toString();
-    let data = str.split(" ").map((v) => parseInt(v))
+    const str = await Deno.readTextFile("input.txt");
     let memo = {};
 
     function blink(num, i = 25) {
-        if (memo[`${num}-${i}`]) return memo[`${num}-${i}`];
+        if (!memo[num]) memo[num] = [];
+        if (memo[num][i]) return memo[num][i];
         if (i == 0) { return 1; }
         i--;
         let len = 0;
@@ -18,13 +17,11 @@ export async function part1() {
         } else {
             len += blink(num * 2024, i);
         }
-        memo[`${num}-${i + 1}`] = len;
+        memo[num][i + 1] = len;
         return len;
     }
 
     let count = 0
-    for (let i = 0; i < data.length; i++) {
-        count += blink(data[i], 25);
-    }
+    str.split(" ").forEach((v) => count += blink(Number(v), 25))
     return count
 }
