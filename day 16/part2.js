@@ -1,37 +1,66 @@
 const fs = require("fs");
 
 const str = fs.readFileSync("input.txt", "utf-8");
-const unitFix = 10000000000000;
-const data = str.split("\r\n\r\n").map((v, i) => {
-    const inp = v.split("\r\n");
-    const a = inp[0].match(/(?<=\+)\d+/g).map(Number)
-    const b = inp[1].match(/(?<=\+)\d+/g).map(Number)
-    const prize = inp[2].match(/(?<=\=)\d+/g).map((v)=>Number(v)+unitFix)
-    return {
-        a: a,
-        b: b,
-        prize: prize,
+const data = str.split("\r\n").map(v => v.split(""))
+const dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+const start = [data.length - 2, 1];
+
+
+const visited = {};
+const path = new Set();
+const backtrack = {};
+function findPath(start, startDir) {
+    const queue = [[...start, 0, startDir]];
+    let lowest = Infinity;
+    while (queue.length) {
+        const [i, j, score, prevDir] = queue.shift();
+        if ((visited[i] ?? [])[j] && visited[i][j] < score) {
+            continue;
+        }
+        if (!visited[i]) visited[i] = {};
+        visited[i][j] = score;
+
+        if (data[i][j] === "E") {
+            lowest = Math.min(lowest, score);
+            continue;
+        }
+        for (const [idx, [di, dj]] of dirs.entries()) {
+            const ni = i + di, nj = j + dj;
+            const add = (idx === prevDir) ? 1 : 1001;
+            if ((data[ni] ?? [])[nj] !== "#" && (!(visited[ni] ?? [])[nj] || (visited[ni][nj] >= score + add))) {
+                queue.push([ni, nj, score + add, idx]);
+                if (!backtrack[[ni, nj].toString()]) backtrack[[ni, nj].toString()] = [];
+                if (visited[ni]?.[nj] > score + add) {
+                    backtrack[[ni, nj].toString()] = [[i, j]];
+                } else if (visited[ni]?.[nj] == undefined) {
+                    // console.log(visited[ni]?.[nj])
+                    backtrack[[ni, nj].toString()].push([i, j]);
+                }
+            }
+        }
     }
-})
-
-function solveLinearEquation([x1, y1], [x2, y2], [dx, dy]) {
-    let det = x1 * y2 - x2 * y1;
-    if (det == 0) return -1;
-    let detx = (dx * y2 - dy * x2);
-    let dety = (x1 * dy - y1 * dx);
-    if (detx % det != 0 || dety % det != 0) return -1;
-    return [detx / det, dety / det]
-}
-function winTheClawMachine({ a: [ax, ay], b: [bx, by], prize: [px, py] }) {
-    const sol = solveLinearEquation([ax, ay], [bx, by], [px, py]);
-    if (sol == -1) return 0;
-    else return (sol[0] * 3) + sol[1];
+    let stack = [[1, data[0].length - 2]];
+    // console.log(backtrack)
+    while (stack.length) {
+        const ep = stack.pop();
+        path.add(ep.toString());
+        while (backtrack[ep.toString()].length) {
+            const org = backtrack[ep.toString()].pop();
+            path.add(org.toString())
+            stack.push(org.toString())
+        }
+    }
+    return lowest === Infinity ? -1 : lowest;
 }
 
-let sum = 0;
+let bestScore = findPath(start, 1)
+console.log(bestScore)
+console.log(path.size)
+return;
 for (let i = 0; i < data.length; i++) {
-    const res = winTheClawMachine(data[i]);
-    sum += res;
+    for (let j = 0; j < data[0].length; j++) {
+        if (path.has(`${i},${j}`)) process.stdout.write("0")
+        else process.stdout.write(data[i][j])
+    }
+    process.stdout.write("\n")
 }
-
-console.log(sum)

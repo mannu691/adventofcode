@@ -2,30 +2,32 @@ const fs = require("fs");
 
 const str = fs.readFileSync("input.txt", "utf-8");
 const data = str.split("\r\n").map(v => v.split(""))
-const start = [data.length - 2, 1];
-const paths = []
 const dirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+const start = [data.length - 2, 1];
 
-let lowest = Infinity;
-function checkPath([i, j], [n, m] = [0, 0], checked = new Set(), score = 0) {
-    if (score >= lowest) return score;
-    if (data[i][j] == "E") return score;
 
-    checked.add([i, j].toString());
-    dirs.forEach(([di, dj]) => {
-        if (!checked.has([i + di, j + dj].toString()) && (data[i + di] ?? [])[j + dj] != '#') {
-            let add = ((n == di) && (m == dj)) ? 1 : 1001;
-
-            const sc = checkPath([i + di, j + dj], [di, dj], new Set(checked), score + add);
-            if (sc < lowest) {
-                lowest = sc;
-                console.log("NEW LOW : " + lowest)
+function findPath(start, startDir) {
+    const queue = [[...start, 0, startDir]];
+    const visited = {};
+    let lowest = Infinity;
+    while (queue.length) {
+        const [i, j, score, prevDir] = queue.shift();
+        if ((visited[i] ?? [])[j] && (visited[i] ?? [])[j] <= score) continue;
+        if (!visited[i]) visited[i] = {};
+        visited[i][j] = score;
+        if (data[i][j] === "E") {
+            lowest = Math.min(lowest, score);
+            continue;
+        }
+        for (const [idx, [di, dj]] of dirs.entries()) {
+            const ni = i + di, nj = j + dj;
+            const add = (idx === prevDir) ? 1 : 1001;            
+            if ((data[ni] ?? [])[nj] !== "#" && (!(visited[ni] ?? [])[nj] || (visited[ni] ?? [])[nj] > score + add)) {
+                queue.push([ni, nj, score + add, idx]);
             }
         }
-    });
-
-
-    return lowest;
+    }
+    return lowest === Infinity ? -1 : lowest;
 }
 
-console.log(checkPath(start, [0, 1]))
+console.log(findPath(start, 1))
