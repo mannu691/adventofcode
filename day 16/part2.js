@@ -32,7 +32,7 @@ function findPath(start, startDir) {
                 if (!backtrack[[ni, nj].toString()]) backtrack[[ni, nj].toString()] = [];
                 if (visited[ni]?.[nj] > score + add) {
                     backtrack[[ni, nj].toString()] = [[i, j]];
-                } else if (visited[ni]?.[nj] == undefined) {
+                } else if (visited[ni]?.[nj] === undefined || visited[ni][nj] === score + add) {
                     // console.log(visited[ni]?.[nj])
                     backtrack[[ni, nj].toString()].push([i, j]);
                 }
@@ -40,14 +40,15 @@ function findPath(start, startDir) {
         }
     }
     let stack = [[1, data[0].length - 2]];
-    // console.log(backtrack)
     while (stack.length) {
-        const ep = stack.pop();
-        path.add(ep.toString());
-        while (backtrack[ep.toString()].length) {
-            const org = backtrack[ep.toString()].pop();
-            path.add(org.toString())
-            stack.push(org.toString())
+        const ep = stack.pop().toString();
+        path.add(ep);
+        if (backtrack[ep]) {
+            for (const org of backtrack[ep]) {
+                if (!path.has(org.toString())) {
+                    stack.push(org);
+                }
+            }
         }
     }
     return lowest === Infinity ? -1 : lowest;
@@ -56,11 +57,10 @@ function findPath(start, startDir) {
 let bestScore = findPath(start, 1)
 console.log(bestScore)
 console.log(path.size)
-return;
 for (let i = 0; i < data.length; i++) {
     for (let j = 0; j < data[0].length; j++) {
-        if (path.has(`${i},${j}`)) process.stdout.write("0")
-        else process.stdout.write(data[i][j])
+        if (path.has(`${i},${j}`)) process.stdout.write("0");
+        else process.stdout.write(data[i][j]);
     }
-    process.stdout.write("\n")
+    process.stdout.write("\n");
 }
