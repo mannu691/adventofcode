@@ -74,12 +74,11 @@ let out = runProgram(registers.A.toString(), registers.B.toString(), registers.C
 
 function find(offset = 0, pow = 1) {
     const incr = pow == 1 ? 1 : 128 * Math.pow(8, pow - 1);
-    // console.log(incr)
-    const max = offset + 128 * Math.pow(8, pow);
-    let i = offset;
-    for (; i <= max; i += incr) {
-        if (eval(`let a = ${i};${out[pow - 1]}`) == program[pow - 1]) {
-            return i;
+    const max = 128 * Math.pow(8, pow - 1);
+    for (let i = 0; i <= max; i += incr) {
+        console.log(offset + incr * i)
+        if (eval(`let a = ${i + offset};${out[pow - 1]}`) == program[pow - 1]) {
+            return i + offset;
         }
     }
     return -1;
@@ -88,6 +87,7 @@ let offset = 0
 for (let i = 1; i <= 15; i++) {
     offset = find(offset, i);
     console.log(offset);
+    console.log("----------------------");
 }
 console.log(find(230, 3))
 return;
