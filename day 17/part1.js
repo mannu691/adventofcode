@@ -27,11 +27,8 @@ const operations = {
     7: (literal, combo) => registers.C = Math.floor(registers.A / Math.pow(2, combo)),
 
 };
-registers.A = 1131487784893
 console.log(program)
 console.log(registers)
-
-
 for (; i < program.length - 1; jump ? null : i += 2) {
     jump = false;
     let combo = 0;
