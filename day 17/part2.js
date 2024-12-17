@@ -1,7 +1,4 @@
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-
 const fs = require("fs");
-
 
 const str = fs.readFileSync("input.txt", "utf-8");
 const inp = str.split("\r\n\r\n");
@@ -13,26 +10,27 @@ inp[0].split("\r\n").forEach(v => {
     registers[res[0][res[0].length - 1]] = Number(res[1])
 })
 
-
-function runProgram(a = 0, b = 0, c = 0, program = []) {
+function runProgram(a = '0', b = '0', c = '0', program = []) {
+    a = 'a'
     let i = 0;
     let jump = false;
     let out = [];
-
+    let f = 0;
     const operations = {
-        0: (literal, combo) => a = Math.floor(a / Math.pow(2, combo)),
-        1: (literal, combo) => b = b ^ literal,
-        2: (literal, combo) => b = combo % 8,
+        0: (literal, combo) => a = `(Math.floor(${a} / Math.pow(2, ${combo})))`,
+        1: (literal, combo) => b = `(${b} ^ ${literal})`,
+        2: (literal, combo) => b = `(${combo} % 8)`,
         3: (literal, combo) => {
-            if (a != 0) {
-                i = literal
-                jump = true;
+            if (out.length == program.length) {
+                return
             }
+            i = literal
+            jump = true;
         },
-        4: (literal, combo) => b = b ^ c,
-        5: (literal, combo) => out.push(combo % 8),
-        6: (literal, combo) => b = Math.floor(a / Math.pow(2, combo)),
-        7: (literal, combo) => c = Math.floor(a / Math.pow(2, combo)),
+        4: (literal, combo) => b = `(${b} ^ ${c})`,
+        5: (literal, combo) => out.push(`(${combo} % 8)`),
+        6: (literal, combo) => b = `(Math.floor(${a} / Math.pow(2,${combo})))`,
+        7: (literal, combo) => c = `(Math.floor(${a} / Math.pow(2,${combo})))`,
     };
 
     for (; i < program.length - 1; jump ? null : i += 2) {
@@ -48,56 +46,34 @@ function runProgram(a = 0, b = 0, c = 0, program = []) {
     return out;
 }
 
+let out = runProgram(registers.A.toString(), registers.B.toString(), registers.C.toString(), program);
 
-if (isMainThread) {
-    const workers = [];
-    const chunkSize = 100000000000;
-    const MAX = chunkSize;
-    for (let i = 0; i < MAX; i += chunkSize) {
-        const chunk = [i, i + chunkSize];
-        const worker = new Worker(__filename, { workerData: chunk });
-        workers.push(worker);
-    }
-    const promises = workers.map((worker) => {
-        return new Promise((resolve, reject) => {
-            worker.on('message', (message) => {
-                resolve(message);
-            });
-            worker.on('error', (error) => {
-                reject(error);
-            });
-        });
-    });
-    Promise.all(promises).then((results) => {
-        // console.log("Finished with : " + results.filter(v => v != -1))
-    });
+function find(offset = 0, pow = 1) {
+    const incr = pow == 1 ? 1 : 128 * Math.pow(8, pow - 1);
+    const max = pow == 1 ? 1024 : 8;
+    let offsets = []
 
-} else {
-    const chunk = workerData;
-    for (let a = chunk[0]; a <= chunk[1]; a++) {
-        // let out = runProgram(i, registers.b, registers.c, program);
-        // console.log(i)
-        if (((((((a % 8) ^ 1) ^ 5) ^ (Math.floor(a / Math.pow(2,((a % 8) ^ 1))))) % 8)==2)&&
-        (((((((Math.floor(a / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2,(((Math.floor(a / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==4)&&
-        (((((((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==1)&&
-        (((((((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==1)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==7)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==5)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==1)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==5)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==4)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==3)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==0)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==3)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==5)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==5)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==3)&&
-        (((((((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1) ^ 5) ^ (Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2,(((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor((Math.floor(a / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) / Math.pow(2, 3))) % 8) ^ 1))))) % 8)==0)) {
-            console.log("A : " + a);
-            parentPort.postMessage(a);
-            return;
+    for (let i = 0; i <= max; i++) {
+        //lol this is a code injection hazard;
+        if (eval(`let a = ${offset + incr * i};${out[pow - 1]}`) == program[pow - 1]) {
+            offsets.push([offset + incr * i, pow + 1]);
         }
     }
-    console.log(chunk)
-    // parentPort.postMessage(-1);
+    return offsets;
 }
+
+let offsets = [[0, 1]]
+let lowest = Infinity
+
+while (offsets.length) {
+    let [offset, pow] = offsets.pop();
+    let res = find(offset, pow);
+    if (res.length != 0) {
+        if (pow == program.length) {
+            if (lowest > res[0][0]) lowest = res[0][0]
+        } else {
+            offsets.push(...res);
+        }
+    }
+}
+console.log(lowest)
