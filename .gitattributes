@@ -1,0 +1,2 @@
+*.go linguist-language=Go
+*.cpp linguist-language=C++
