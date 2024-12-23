@@ -1,3 +1,19 @@
+import fs from "fs"
+const inputDir = "inputs"
+const testDir = "tests"
+
+export const getInput = (day = "1", test = false) => {
+    let dir = inputDir;
+    if (test) dir = testDir;
+    dir = "../" + dir;
+    if (!fs.existsSync(dir)) dir = "../" + dir;
+    return fs.readFileSync(`${dir}/day-${day}.txt`, "utf-8").replaceAll("\r\n", "\n");
+}
+
+export const getInputMatrix = (test = false) => {
+    return new Matrix(getInput(test).split("\n").map(v => v.split("")))
+}
+
 export class Matrix {
     constructor(data) {
         this.proxy = new Proxy(data, {

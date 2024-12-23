@@ -1,4 +1,6 @@
 #include <bits\stdc++.h>
+#include "../utils/cpp/utils.cpp"
+
 using namespace std;
 
 bool isSafe(vector<int> &report, bool damped = false, bool rec = true)
@@ -36,8 +38,7 @@ bool isSafe(vector<int> &report, bool damped = false, bool rec = true)
 }
 int main()
 {
-    freopen("input.txt", "r", stdin);
-    freopen("output.txt", "w", stdout);
+    bind_input("2",false);
     vector<int> report;
     int curr;
     int count = 0;

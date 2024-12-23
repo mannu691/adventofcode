@@ -4,8 +4,32 @@
 #include <cmath>
 #include <queue>
 #include <unordered_map>
-
+#include <sys/stat.h>
 using namespace std;
+string _inputDir = "inputs";
+string _testDir = "tests";
+
+bool directoryExists(const string &dir)
+{
+    struct stat info;
+    return (stat(dir.c_str(), &info) == 0 && (info.st_mode & S_IFDIR));
+}
+
+void bind_input(string day, bool test)
+{
+    string dir = _inputDir;
+    if (test)
+        dir = _testDir;
+
+    dir = "../" + dir;
+    if (!directoryExists(dir))
+    {
+        dir = "../" + dir;
+    }
+    string filePath = dir + "/day-" + day + ".txt";
+    freopen(filePath.c_str(), "r", stdin);
+}
+
 typedef struct
 {
     int x;

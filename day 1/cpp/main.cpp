@@ -1,10 +1,10 @@
 #include <bits\stdc++.h>
+#include "../../utils/cpp/utils.cpp"
 using namespace std;
 
 int main()
 {
-    freopen("input.txt", "r", stdin);
-    freopen("output.txt", "w", stdout);
+    bind_input("1", false);
     vector<int> left;
     vector<int> right;
     int a, b;
@@ -22,8 +22,8 @@ int main()
         diffSum += abs(left[i] - right[i]);
         countSum += left[i] * count(right.begin(), right.end(), left[i]);
     }
-    cout << "Sum of Diff : " << diffSum << endl;
-    cout << "Similarity : " << countSum << endl;
+    cout << "Part 1 : " << diffSum << endl;
+    cout << "Part 2 : " << countSum << endl;
 
     return 0;
 }
